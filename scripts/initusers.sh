@@ -23,7 +23,7 @@ do
         useradd $theuser -d /home/users/$theuser -s /bin/bash -g g_user
         mkdir -p /home/users/$theuser/all_blogs
         chmod 700 /home/users/$theuser
-        chown $theuser:g_user -R /home/users/$theusernn
+        chown $theuser:g_user -R /home/users/$theuser
     elif ! getent group g_user | grep -w $theuser &> /dev/null
     then 
         usermod -aG g_user $theuser
@@ -38,19 +38,39 @@ do
         useradd $theuser -d /home/authors/$theuser -s /bin/bash -g g_author
         mkdir -p /home/authors/$theuser/blogs
         mkdir -p /home/authors/$theuser/public
+        touch /home/authors/$theuser/blogs.yaml
+        chmod 700 /home/authors/$theuser/blogs.yaml
+        cat > /home/authors/$theuser/blogs.yaml <<EOF
+categories:
+    1: "Sports"
+    2: "Cinema"
+    3: "Technology"
+    4: "Travel"
+    5: "Food"
+    6: "Lifestyle"
+    7: "Finance"
+blogs:
+EOF
         chmod 701 /home/authors/$theuser
         chmod 705 /home/authors/$theuser/public
         chown $theuser:g_author -R /home/authors/$theuser
-        for norm_user in ${users_username[@]}
-        do
-            ln -s /home/authors/$theuser/public /home/users/$norm_user/all_blogs/$theuser 2> /dev/null
-        done
+        chown root:g_admin /home/authors/$theuser/blogs.yaml
     elif ! getent group g_author | grep -w $theuser &> /dev/null
     then 
         usermod -aG g_author $theuser
         usermod -U $theuser
     fi
 done
+
+
+for theuser in ${users_username[@]}
+do
+    for norm_user in ${users_username[@]}
+    do
+        ln -s /home/authors/$theuser/public /home/users/$norm_user/all_blogs/$theuser 2> /dev/null
+    done
+done
+
 
 for theuser in ${mods_username[@]}
 do
@@ -60,8 +80,8 @@ do
         mkdir -p /home/mods/$theuser
         chmod 700 /home/mods/$theuser
         chown $theuser:g_mod -R /home/mods/$theuser
-        mapfile -t assign_authors < <(yq -r ".mods[] | select(.username == \"$theuser\") | .authors[]" "users.yaml" )
-        for theauthor in ${theauthors[@]}
+        mapfile -t assign_authors < <(yq -r ".mods[] | select(.username == \"$theuser\" ).authors[]" "users.yaml" )
+        for theauthor in ${assign_authors[@]}
         do
             setfacl -m u:$theuser:rw /home/authors/$theauthor/public
         done
