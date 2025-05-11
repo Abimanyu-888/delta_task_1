@@ -77,13 +77,14 @@ do
     if ! id $theuser &> /dev/null
     then
         useradd $theuser -d /home/mods/$theuser -s /bin/bash -g g_mod
-        mkdir -p /home/mods/$theuser
+        mkdir -p /home/mods/$theuser/blacklist.txt
         chmod 700 /home/mods/$theuser
         chown $theuser:g_mod -R /home/mods/$theuser
         mapfile -t assign_authors < <(yq -r ".mods[] | select(.username == \"$theuser\" ).authors[]" "users.yaml" )
         for theauthor in ${assign_authors[@]}
         do
-            setfacl -m u:$theuser:rw /home/authors/$theauthor/public
+            setfacl -m u:$theuser:rwx /home/authors/$theauthor/public
+            ln -s /home/authors/$theauthor/public /home/mods/$theuser/$theauthor 2> /dev/null
         done
     fi
 done

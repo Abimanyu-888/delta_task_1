@@ -16,6 +16,7 @@ create_blog()
         categories+=($x)
     }
     done
+    
     cat >> ~/blogs.yaml <<EOF
     - file_name: "${file}"
     publish_status: false
