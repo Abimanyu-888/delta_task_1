@@ -25,8 +25,8 @@ do
     done < "~/blacklist.txt"
     if [[ count -eq 5 ]]
     then
-        author_name=$( echo $dir_real_path | -d/ -f4 )
-        file_name=$( echo $dir_real_path | -d/ -f6 )
+        author_name=$( echo $dir_real_path | cut -d/ -f4 )
+        file_name=$( echo $dir_real_path | cut -d/ -f6 )
         rm /home/authors/$author_name/public/$file_name
         chmod 700 /home/authors/$author_name/blogs/$file_name
         export count

@@ -22,6 +22,8 @@ do
     then
         useradd $theuser -d /home/users/$theuser -s /bin/bash -g g_user
         mkdir -p /home/users/$theuser/all_blogs
+        mkdir -p /home/users/$theuser/For_You
+        touch /home/users/$theuser/FYI.yaml
         chmod 700 /home/users/$theuser
         chown $theuser:g_user -R /home/users/$theuser
     elif ! getent group g_user | grep -w $theuser &> /dev/null
@@ -80,7 +82,7 @@ do
         mkdir -p /home/mods/$theuser/blacklist.txt
         chmod 700 /home/mods/$theuser
         chown $theuser:g_mod -R /home/mods/$theuser
-        mapfile -t assign_authors < <(yq -r ".mods[] | select(.username == \"$theuser\" ).authors[]" "users.yaml" )
+        assign_authors=$(yq -r ".mods[] | select(.username == \"$theuser\" ).authors[]" "users.yaml" )
         for theauthor in ${assign_authors[@]}
         do
             setfacl -m u:$theuser:rwx /home/authors/$theauthor/public

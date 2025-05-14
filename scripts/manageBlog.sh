@@ -10,13 +10,12 @@ create_blog()
     echo "Enter categories from the following one by one"
     yq '.categories' ~/blogs.yaml
     local categories=()
-    while read x
+    for ((i=1; i<=3; i++)) 
     do
-    {
-        categories+=($x)
-    }
+        read x
+        categories+=("$x")
     done
-    
+    mv ~/blogs/$file ~/blogs/$file.${categories[0]}.${categories[1]}.${categories[2]}
     cat >> ~/blogs.yaml <<EOF
     - file_name: "${file}"
     publish_status: false
