@@ -5,8 +5,7 @@ set -e
 create_blog()
 {
     local file="$1"
-    touch ~/blogs/$file
-    chmod 700 ~/blogs/$file
+
     echo "Enter categories from the following one by one"
     yq '.categories' ~/blogs.yaml
     local categories=()
@@ -15,9 +14,11 @@ create_blog()
         read x
         categories+=("$x")
     done
-    mv ~/blogs/$file ~/blogs/$file.${categories[0]}.${categories[1]}.${categories[2]}
+    touch ~/blogs/$file.${categories[0]}.${categories[1]}.${categories[2]}
+    chmod 700 ~/blogs/$file.${categories[0]}.${categories[1]}.${categories[2]}
+    local new_name=$file.${categories[0]}.${categories[1]}.${categories[2]}
     cat >> ~/blogs.yaml <<EOF
-    - file_name: "${file}"
+    - file_name: "${new_file}"
     publish_status: false
     cat_order: [${categories[@]}]
 EOF
@@ -25,8 +26,16 @@ EOF
 publish_blog()
 {
     local file="$1"
-    ln -s ~/blogs/$file ~/public/$file
+    touch ~/public/$file
     chmod 744 ~/blogs/$file
+    chmod 111 ~/public/$file
+
+    cat > ~/public/$file <<EOF
+#!/usr/bin/bash
+echo "\$(date '+%d-%m-%Y %H:%M:%S') $file Opened_published_by $(whoami)" >> /var/log/blog_server/blog_access.log
+cat /home/authors/$(whoami)/blogs/$file
+EOF
+    echo "$(date '+%d-%m-%Y %H:%M:%S') $(whoami) published $file" >> /var/log/blog_server/blog_publish.log
     yq -i "(.blogs[] | select(.file_name == \"$file\" )) |= (.publish_status = true)" ~/blogs.yaml
 }
 archive_blog()
@@ -44,7 +53,7 @@ delete_blog()
     if find ~/public/$file &> /dev/null 
     then 
         rm ~/public/$file
-        
+        echo "$(date '+%d-%m-%Y %H:%M:%S') $(whoami) published $file deleted" >> /var/log/blog_server/blog_delete.log
     fi
     yq -i "del(.blogs[] | select(.file_name == \"$file\"))" ~/blogs.yaml
 }
@@ -60,7 +69,9 @@ edit_blog()
         categories+=($x)
     }
     done
-    yq -i "(.blogs[] | select(.file_name == \"$file\" )) |= (.cat_order = [${categories[@]}])" ~/blogs.yaml
+    mv ~/blogs/$file ~/blogs/$file.${categories[0]}.${categories[1]}.${categories[2]}
+    local new_name=$file.${categories[0]}.${categories[1]}.${categories[2]}
+    yq -i "(.blogs[] | select(.file_name == \"$file\" )) |= (.cat_order = [${categories[@]}]) |= (.file_name = \"$new_name\" )" ~/blogs.yaml
 
 }
 

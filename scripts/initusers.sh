@@ -156,3 +156,12 @@ getent group g_user | cut -d: -f4 | tee /etc/g_user_members.txt &> /dev/null
 getent group g_author | cut -d: -f4 | tee /etc/g_author_members.txt &> /dev/null
 getent group g_mod | cut -d: -f4 | tee /etc/g_mod_members.txt &> /dev/null
 getent group g_admin | cut -d: -f4 | tee /etc/g_admin_members.txt &> /dev/null
+
+
+if [[ ! -d /var/log/blog_server ]]
+then
+    mkdir /var/log/blog_server
+    touch /var/log/blog_server/blog_access.log; chmod 752 /var/log/blog_server/blog_access.log
+    touch /var/log/blog_server/blog_publish.log; chmod 752 /var/log/blog_server/blog_publish.log
+    touch /var/log/blog_server/blog_delete.log; chmod 752 /var/log/blog_server/blog_delete.log
+fi
