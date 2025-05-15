@@ -18,9 +18,9 @@ create_blog()
     chmod 700 ~/blogs/$file.${categories[0]}.${categories[1]}.${categories[2]}
     local new_name=$file.${categories[0]}.${categories[1]}.${categories[2]}
     cat >> ~/blogs.yaml <<EOF
-    - file_name: "${new_file}"
-    publish_status: false
-    cat_order: [${categories[@]}]
+    - file_name: "${new_name}"
+      publish_status: false
+      cat_order: [${categories[@]}]
 EOF
 }
 publish_blog()
@@ -63,11 +63,10 @@ edit_blog()
     echo "Enter new categories from the following one by one"
     yq '.categories' ~/blogs.yaml
     local categories=()
-    while read x
+    for ((i=1; i<=3; i++)) 
     do
-    {
-        categories+=($x)
-    }
+        read x
+        categories+=("$x")
     done
     mv ~/blogs/$file ~/blogs/$file.${categories[0]}.${categories[1]}.${categories[2]}
     local new_name=$file.${categories[0]}.${categories[1]}.${categories[2]}
@@ -79,28 +78,28 @@ if [[ "$#" -eq 0 ]]
 then
     echo "Use: $0 [-c to create blog file, -p to publish blog, -a to archive blog, -d to delete blog and -e to edit blog category]"
     exit 1
-
+fi
 while [[ "$#" -gt 0 ]]
 do
     case "$1" in
         -c)
-            create_blog
+            create_blog "$1"
             shift
             ;;
         -p)
-            publish_file
+            publish_blog "$1"
             shift
             ;;
         -a)
-            archive_file
+            archive_blog "$1"
             shift
             ;;
         -d)
-            delete_blog
+            delete_blog "$1"
             shift
             ;;
         -e)
-            edit_blog
+            edit_blog "$1"
             shift
             ;;
         *)

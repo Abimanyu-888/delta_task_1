@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ $# -ne 1 && -d "$1" ]]
+if [[ $# -ne 1 || -d "$1" ]]
 then
     echo "use: $0 <author_blog_dir>"
     exit 1
@@ -14,7 +14,7 @@ do
     count=0
     while IFS= read -r word || [ -n "$word" ]; do
         replace_star=$(printf "%${#word}s" | tr ' ' '*')
-        line_no=$(grep -i -n "$word" "$i" | cut -d: -f1 )
+        line_no=$(grep -i -n "$word" "$i" | cut -d: -f1 | paste -sd, -)
         if grep -q -i "$word" "$i" 
         then
             echo "Found blacklisted word $word in "$i" at the line no/nos ${line_no[@]}"
@@ -22,15 +22,16 @@ do
         fi
         sed -i "s/$word/$replace_star/gI" "$i"
 
-    done < "~/blacklist.txt"
-    if [[ count -eq 5 ]]
+    done < "$HOME/blacklist.txt"
+    if [[ count -ge 5 ]]
     then
         author_name=$( echo $dir_real_path | cut -d/ -f4 )
         file_name=$( echo $dir_real_path | cut -d/ -f6 )
         rm /home/authors/$author_name/public/$file_name
         chmod 700 /home/authors/$author_name/blogs/$file_name
         export count
-        yq -i '(.blogs[] | select(.file_name == \"$file\" )) |= (.publish_status = false) |= (.mod_comments = "found " + env(count) + " blacklist words" )' /home/authors/$author_name/blogs.yaml
+        export file_name
+        yq -i '(.blogs[] | select(.file_name == strenv(file_name) )) |= (.publish_status = false) |= (.mod_comments = "found " + env(count) + " blacklist words" )' /home/authors/$author_name/blogs.yaml
         echo "Blog $file_name is archived due to excessive blacklisted words."
     fi
 done

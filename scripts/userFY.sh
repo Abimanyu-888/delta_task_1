@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 set -e
 
-users_username=($(yq  '.users[].username' "userpref.yaml"))
+users_username=($(yq  '.users[].username' "/opt/blog_server/files/userpref.yaml"))
 declare -A category
 category["Sports"]=1
 category["Cinema"]=2
@@ -15,20 +15,20 @@ declare -A user_pref
 user_count=0
 for theuser in ${users_username[@]}
 do
-    rm -rf /home/users/$theuser/For_You &> /dev/null
+    rm -f /home/users/$theuser/For_You/* &> /dev/null
     rm -f /home/users/$theuser/FYI.yaml &> /dev/null
     touch /home/users/$theuser/FYI.yaml
     cat > /home/users/$theuser/FYI.yaml <<EOF
 User_Preferred_Blogs:
 EOF
-    user_pref["$theuser"1]=${category[$(yq ".users[] | select(.username == \"$theuser\" ).pref1" "userpref.yaml")]}
-    user_pref["$theuser"2]=${category[$(yq ".users[] | select(.username == \"$theuser\" ).pref2" "userpref.yaml")]}
-    user_pref["$theuser"3]=${category[$(yq ".users[] | select(.username == \"$theuser\" ).pref3" "userpref.yaml")]}
+    user_pref["$theuser"1]=${category[$(yq ".users[] | select(.username == \"$theuser\" ).pref1" "/opt/blog_server/files/userpref.yaml")]}
+    user_pref["$theuser"2]=${category[$(yq ".users[] | select(.username == \"$theuser\" ).pref2" "/opt/blog_server/files/userpref.yaml")]}
+    user_pref["$theuser"3]=${category[$(yq ".users[] | select(.username == \"$theuser\" ).pref3" "/opt/blog_server/files/userpref.yaml")]}
     (( user_count++ ))
 done
 
 declare -A blog_cat
-declare -A blog_assin
+declare -A blog_assign
 blog_count=0
 for blog in /home/authors/*/public/*
 do
@@ -67,12 +67,12 @@ if [[ blog_count -le 3 ]]
 then 
     for theuser in ${users_username[@]}
     do
-        for blog in /home/authors/*public/*
+        for blog in /home/authors/*/public/*
         do
             blog_name=$(realpath $blog | cut -d/ -f6 )
             author=$(realpath $blog | cut -d/ -f4 )
             ln -s /home/authors/$author/public/$blog_name /home/users/$theuser/For_You/$blog_name
-            yq -i "(.User_Preferred_BLogs += [\"$blog_name\"])" /home/users/$theuser/FYI.yaml
+            yq -i "(.User_Preferred_Blogs += [\"$blog_name\"])" /home/users/$theuser/FYI.yaml
         done
     done
 else
@@ -102,7 +102,8 @@ else
         for i in {0..2}
         do
             ln -s /home/authors/${pick_author[$i]}/public/${pick_blog[$i]} /home/users/$theuser/For_You/${pick_blog[$i]}
-            yq -i "(.User_Preferred_BLogs += [\"${pick_blog[$i]}\"])" /home/users/$theuser/FYI.yaml
+            yq -i "(.User_Preferred_Blogs += [\"${pick_blog[$i]}\"])" /home/users/$theuser/FYI.yaml
+        done
     done
 fi
 
